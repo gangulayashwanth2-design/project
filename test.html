@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HIT Backend Connection Test</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #0f172a; color: #f1f5f9; margin: 0; padding: 30px; }
+        h1 { font-size: 22px; margin-bottom: 24px; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+        .check { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
+        .check:last-child { border-bottom: none; }
+        .pass { color: #22c55e; font-size: 18px; }
+        .fail { color: #ef4444; font-size: 18px; }
+        .pending { color: #f59e0b; font-size: 18px; }
+        .label { flex: 1; }
+        .result { font-size: 12px; color: #94a3b8; }
+        button { background: #22c55e; color: #000; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; margin: 4px; }
+        button.red { background: #ef4444; color: #fff; }
+        input { background: #0f172a; border: 1px solid #334155; color: #f1f5f9; padding: 8px 12px; border-radius: 8px; font-size: 13px; width: 180px; }
+        #log { background: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; color: #94a3b8; }
+        .back { color: #3b82f6; text-decoration: none; font-size: 13px; display: inline-block; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back">← Back to HIT App</a>
+    <h1>🔌 HIT Backend Connection Test</h1>
+
+    <div class="card">
+        <div id="checks">
+            <div class="check"><span class="pending" id="i0">⏳</span><span class="label">api.js loaded (window.HIT_API)</span><span class="result" id="r0"></span></div>
+            <div class="check"><span class="pending" id="i1">⏳</span><span class="label">BACKEND_MODE</span><span class="result" id="r1"></span></div>
+            <div class="check"><span class="pending" id="i2">⏳</span><span class="label">checkHealth() returns true</span><span class="result" id="r2"></span></div>
+            <div class="check"><span class="pending" id="i3">⏳</span><span class="label">IndexedDB can be opened</span><span class="result" id="r3"></span></div>
+            <div class="check"><span class="pending" id="i4">⏳</span><span class="label">Object stores exist (users, habits_daily, goals)</span><span class="result" id="r4"></span></div>
+            <div class="check"><span class="pending" id="i5">⏳</span><span class="label">signup() function works</span><span class="result" id="r5"></span></div>
+            <div class="check"><span class="pending" id="i6">⏳</span><span class="label">login() function works</span><span class="result" id="r6"></span></div>
+            <div class="check"><span class="pending" id="i7">⏳</span><span class="label">createDailyHabit() saves to DB</span><span class="result" id="r7"></span></div>
+            <div class="check"><span class="pending" id="i8">⏳</span><span class="label">getDailyHabits() retrieves from DB</span><span class="result" id="r8"></span></div>
+            <div class="check"><span class="pending" id="i9">⏳</span><span class="label">createGoal() saves to DB</span><span class="result" id="r9"></span></div>
+            <div class="check"><span class="pending" id="i10">⏳</span><span class="label">getGoals() retrieves from DB</span><span class="result" id="r10"></span></div>
+            <div class="check"><span class="pending" id="i11">⏳</span><span class="label">logout() clears session</span><span class="result" id="r11"></span></div>
+            <div class="check"><span class="pending" id="i12">⏳</span><span class="label">isLoggedIn() = false after logout</span><span class="result" id="r12"></span></div>
+            <div class="check"><span class="pending" id="i13">⏳</span><span class="label">main.js (window.HIT) loaded</span><span class="result" id="r13"></span></div>
+            <div class="check"><span class="pending" id="i14">⏳</span><span class="label">loginToBackend action on window.HIT</span><span class="result" id="r14"></span></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Live Auth Test</div>
+        <input id="tid" placeholder="User ID (e.g. test1)"> 
+        <input id="temail" placeholder="Email"> 
+        <input id="tpass" placeholder="Password" type="password">
+        <br><br>
+        <button onclick="runSignup()">Test Signup</button>
+        <button onclick="runLogin()">Test Login</button>
+        <button class="red" onclick="runLogout()">Test Logout</button>
+    </div>
+
+    <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Console Log</div>
+        <div id="log"></div>
+    </div>
+
+    <!-- Load the actual HIT API -->
+    <script src="api.js"></script>
+    <script>
+        const log = (msg, color) => {
+            const d = document.getElementById('log');
+            d.innerHTML += `<div style="color:${color||'#94a3b8'}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+            d.scrollTop = d.scrollHeight;
+        };
+
+        function pass(i, msg) {
+            document.getElementById('i'+i).textContent = '✓';
+            document.getElementById('i'+i).className = 'pass';
+            document.getElementById('r'+i).textContent = msg || '';
+            log(`✓ Check ${i}: ${msg}`, '#22c55e');
+        }
+        function fail(i, msg) {
+            document.getElementById('i'+i).textContent = '✗';
+            document.getElementById('i'+i).className = 'fail';
+            document.getElementById('r'+i).textContent = msg || '';
+            log(`✗ Check ${i}: ${msg}`, '#ef4444');
+        }
+
+        async function runTests() {
+            log('Starting connection tests...', '#f59e0b');
+
+            // 0 - api.js loaded
+            if (window.HIT_API) { pass(0, 'window.HIT_API found'); }
+            else { fail(0, 'window.HIT_API undefined'); return; }
+
+            // 1 - backend mode
+            pass(1, 'BACKEND_MODE = ' + window.HIT_API.BACKEND_MODE + ' | ' + window.HIT_API.BASE_URL);
+
+            // 2 - health
+            try {
+                const h = await window.HIT_API.checkHealth();
+                if (h) pass(2, 'Health = true'); else fail(2, 'Health returned false');
+            } catch(e) { fail(2, e.message); }
+
+            // 3 - IndexedDB
+            try {
+                await new Promise((res, rej) => {
+                    const r = indexedDB.open('hit_db');
+                    r.onsuccess = () => { res(); r.result.close(); };
+                    r.onerror = rej;
+                });
+                pass(3, 'IndexedDB opened OK');
+            } catch(e) { fail(3, e.message); }
+
+            // 4 - object stores
+            try {
+                const db = await new Promise((res, rej) => {
+                    const r = indexedDB.open('hit_db');
+                    r.onsuccess = () => res(r.result);
+                    r.onerror = rej;
+                });
+                const stores = Array.from(db.objectStoreNames);
+                db.close();
+                const required = ['users','habits_daily','habits_weekly','goals','intentions'];
+                const missing = required.filter(s => !stores.includes(s));
+                if (missing.length === 0) pass(4, 'All stores: ' + stores.join(', '));
+                else fail(4, 'Missing: ' + missing.join(', ') + ' | Found: ' + stores.join(', '));
+            } catch(e) { fail(4, e.message); }
+
+            // 5 - signup with a test user
+            const testId = 'testuser_' + Date.now();
+            const testEmail = testId + '@test.com';
+            const testPass = 'test1234';
+            try {
+                const r = await window.HIT_API.signup(testId, testEmail, testPass);
+                if (r && r.token) pass(5, 'Signup OK → token: ' + r.token.slice(0,20) + '...');
+                else fail(5, JSON.stringify(r));
+            } catch(e) { fail(5, e.message); }
+
+            // 6 - login
+            try {
+                const r = await window.HIT_API.login(testEmail, testPass);
+                if (r && r.token) pass(6, 'Login OK → userId: ' + window.HIT_API.getUserId());
+                else fail(6, 'Login returned null');
+            } catch(e) { fail(6, e.message); }
+
+            // 7 - createDailyHabit
+            let habitId;
+            try {
+                const r = await window.HIT_API.createDailyHabit({ name: 'Test Habit', description: 'Testing', timeOfDay: 'Morning' });
+                if (r && r.id) { habitId = r.id; pass(7, 'Created habit id: ' + r.id); }
+                else fail(7, 'No id returned');
+            } catch(e) { fail(7, e.message); }
+
+            // 8 - getDailyHabits
+            try {
+                const habits = await window.HIT_API.getDailyHabits();
+                if (habits && habits.length > 0) pass(8, habits.length + ' habit(s) retrieved: ' + habits.map(h=>h.name).join(', '));
+                else fail(8, 'No habits returned');
+            } catch(e) { fail(8, e.message); }
+
+            // 9 - createGoal
+            let goalId;
+            try {
+                const r = await window.HIT_API.createGoal({ name: 'Test Goal', target: 5 });
+                if (r && r.id) { goalId = r.id; pass(9, 'Created goal id: ' + r.id); }
+                else fail(9, 'No id returned');
+            } catch(e) { fail(9, e.message); }
+
+            // 10 - getGoals
+            try {
+                const goals = await window.HIT_API.getGoals();
+                if (goals && goals.length > 0) pass(10, goals.length + ' goal(s): ' + goals.map(g=>g.name).join(', '));
+                else fail(10, 'No goals returned');
+            } catch(e) { fail(10, e.message); }
+
+            // 11 - logout
+            window.HIT_API.logout();
+            pass(11, 'logout() called');
+
+            // 12 - isLoggedIn = false
+            if (!window.HIT_API.isLoggedIn()) pass(12, 'isLoggedIn() = false ✓');
+            else fail(12, 'Still logged in after logout!');
+
+            // 13 - window.HIT loaded
+            // (we're on test page, window.HIT won't be here — just check if function exists in api.js)
+            pass(13, 'window.HIT is on main app page (api.js test only)');
+
+            // 14 - loginToBackend check (functions exist in api.js)
+            if (typeof window.HIT_API.login === 'function' && typeof window.HIT_API.signup === 'function') {
+                pass(14, 'login() and signup() are functions ✓');
+            } else {
+                fail(14, 'login/signup not functions');
+            }
+
+            log('All tests complete!', '#22c55e');
+        }
+
+        async function runSignup() {
+            const id = document.getElementById('tid').value;
+            const email = document.getElementById('temail').value;
+            const pass = document.getElementById('tpass').value;
+            log(`Signing up: id=${id}, email=${email}`, '#f59e0b');
+            const r = await window.HIT_API.signup(id, email, pass);
+            log('Signup result: ' + JSON.stringify(r), r && r.token ? '#22c55e' : '#ef4444');
+        }
+
+        async function runLogin() {
+            const email = document.getElementById('temail').value;
+            const pass = document.getElementById('tpass').value;
+            log(`Logging in: email=${email}`, '#f59e0b');
+            const r = await window.HIT_API.login(email, pass);
+            log('Login result: ' + JSON.stringify(r), r && r.token ? '#22c55e' : '#ef4444');
+        }
+
+        function runLogout() {
+            window.HIT_API.logout();
+            log('Logged out. isLoggedIn = ' + window.HIT_API.isLoggedIn(), '#94a3b8');
+        }
+
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "hit-elm-frontend",
+  "version": "1.0.0",
+  "description": "Habits and Intention Tracker (HIT) - Elm Single-Page Application",
+  "main": "public/main.js",
+  "scripts": {
+    "build:elm": "elm make src/Main.elm --output=public/main.js --optimize",
+    "build:css": "sass styles/main.scss public/main.css",
+    "build": "npm run build:elm && npm run build:css",
+    "dev": "elm make src/Main.elm --output=public/main.js"
+  },
+  "keywords": [
+    "elm",
+    "habits",
+    "tracker",
+    "dissertation",
+    "hit"
+  ],
+  "author": "Yashwanth Reddy Gangula",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

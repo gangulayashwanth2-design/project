@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HIT - Habits & Intention Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- HIT API Client — connects to Haskell backend (github.com/Hcatlab/HIT) -->
+    <script src="api.js"></script>
+    <script src="main.js"></script>
+    <script>
+        // Initialize HIT App
+        const app = Elm.Main.init({
+            node: document.getElementById("root")
+        });
+
+        // ── LocalStorage Sync ──────────────────────────────────────────
+        const savedData = localStorage.getItem("habitTrackerData");
+        if (savedData) {
+            try {
+                app.ports.loadData.send(savedData);
+            } catch (e) {
+                console.error("Failed to load habit tracker data:", e);
+            }
+        }
+
+        app.ports.saveData.subscribe(function(data) {
+            localStorage.setItem("habitTrackerData", data);
+        });
+
+        // ── Web Notification API ───────────────────────────────────────
+        if (app.ports.notifyUser) {
+            app.ports.notifyUser.subscribe(function(message) {
+                if (!("Notification" in window)) return;
+                if (Notification.permission === "granted") {
+                    new Notification("HIT Reminder", { body: message, icon: "favicon.ico" });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function (permission) {
+                        if (permission === "granted") {
+                            new Notification("HIT Reminder", { body: message, icon: "favicon.ico" });
+                        }
+                    });
+                }
+            });
+        }
+
+        // ── HIT Backend Integration ─────────────────────────────────────
+        // Backend is the in-browser IndexedDB (always available, no server needed)
+        (async function initBackendSync() {
+            if (!window.HIT_API) return;
+
+            const isOnline = await window.HIT_API.checkHealth();
+            if (isOnline) {
+                const mode = window.HIT_API.BACKEND_MODE;
+                console.log('[HIT] Backend ready. Mode:', mode, '|', window.HIT_API.BASE_URL);
+
+                // If already signed in, restore data from IndexedDB / remote
+                if (window.HIT_API.isLoggedIn()) {
+                    await window.HIT_API.syncToAppState();
+                    window.HIT && window.HIT.showToast && window.HIT.showToast('✓ Signed in — data synced');
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
